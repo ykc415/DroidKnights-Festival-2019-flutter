@@ -9,9 +9,6 @@ import 'package:droidknights/res/strings.dart';
 import 'package:flutter/material.dart';
 
 class SchedulePage extends StatelessWidget {
-  static final int ITEMVIEW_TYPE_NORMAL = 0;
-  static final int ITEMVIEW_TYPE_SESSTION = 1;
-  final ScheduleLikeBloc _likeBloc = new ScheduleLikeBloc();
 
   Widget scheduleAppbar() {
     return SliverAppBar(
@@ -32,13 +29,15 @@ class SchedulePage extends StatelessWidget {
     );
   }
 
-  Widget androidAppBarTitle() => Image.asset(
+  Widget androidAppBarTitle() =>
+      Image.asset(
         Strings.SCHEDULE_TAB_IMAGES_APP_BAR,
         fit: BoxFit.fitHeight,
         height: 25,
       );
 
-  Widget iosAppBarTitle() => Text(
+  Widget iosAppBarTitle() =>
+      Text(
         Strings.SCHEDULE_TAB_APPBAR_TITLE,
         style: new TextStyle(
           fontSize: 24.0,
@@ -54,34 +53,72 @@ class SchedulePage extends StatelessWidget {
           body: NestedScrollView(
             headerSliverBuilder:
                 (BuildContext context, bool innerBoxIsScrolled) => [
-                      scheduleAppbar(),
-                    ],
+              scheduleAppbar(),
+            ],
             body: TabBarView(
               children: <Widget>[
-                trackScreen(Strings.SCHEDULE_TAB_JSON_TRACK_SCREEN1),
-                trackScreen(Strings.SCHEDULE_TAB_JSON_TRACK_SCREEN2),
-                trackScreen(Strings.SCHEDULE_TAB_JSON_TRACK_SCREEN3),
+                TrackScreen(Strings.SCHEDULE_TAB_JSON_TRACK_SCREEN1),
+                TrackScreen(Strings.SCHEDULE_TAB_JSON_TRACK_SCREEN2),
+                TrackScreen(Strings.SCHEDULE_TAB_JSON_TRACK_SCREEN3),
               ],
             ),
           ),
         ));
   }
 
-  Widget trackScreen(String filePath) {
-    return FutureBuilder(
-        future: loadSchedule(filePath),
-        builder: (BuildContext context,
-            AsyncSnapshot<List<ScheduleModel>> snapshot) {
-          if (!snapshot.hasData) return Container(color: Colors.black);
-          return Container(
-            color: Colors.black,
-            child: ListView.builder(
-                padding: new EdgeInsets.only(bottom: 30),
-                itemCount: snapshot.data.length,
-                itemBuilder: (context, i) => Column(
-                    children: <Widget>[_itemView(context, snapshot.data[i])])),
-          );
-        });
+  Widget _showItemNormal(context, data) {
+    return ListTile(
+      leading: Text(
+        data.time,
+        style: TextStyle(
+            color: Theme
+                .of(context)
+                .primaryColorLight, fontSize: 12.0),
+      ),
+      title: Text(
+        data.title,
+        style: TextStyle(color: Theme
+            .of(context)
+            .accentColor, fontSize: 16.0),
+      ),
+    );
+  }
+}
+
+class TrackScreen extends StatefulWidget{
+
+  final String filePath;
+
+  TrackScreen(this.filePath);
+
+  @override
+  State createState() => _TrackScreenState();
+}
+
+final ScheduleLikeBloc _likeBloc = new ScheduleLikeBloc();
+
+class _TrackScreenState extends State<TrackScreen> with AutomaticKeepAliveClientMixin<TrackScreen> {
+  static final int ITEMVIEW_TYPE_NORMAL = 0;
+  static final int ITEMVIEW_TYPE_SESSTION = 1;
+
+  List<ScheduleModel> data;
+
+  @override
+  void initState() {
+    super.initState();
+    data = getScheduleModel(this.widget.filePath);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.black,
+      child: ListView.builder(
+          padding: new EdgeInsets.only(bottom: 30),
+          itemCount: data.length,
+          itemBuilder: (context, i) => Column(
+              children: <Widget>[_itemView(context, data[i])])),
+    );
   }
 
   Widget _itemView(context, data) {
@@ -91,15 +128,29 @@ class SchedulePage extends StatelessWidget {
           if (!snapshot.hasData) return Container();
           return data.type == ITEMVIEW_TYPE_SESSTION
               ? _showItemSection(
-                  context,
-                  data,
-                  snapshot.data[_likeBloc.toBase64(data.title + data.time)] ==
-                          null
-                      ? false
-                      : snapshot
-                          .data[_likeBloc.toBase64(data.title + data.time)])
+              context,
+              data,
+              snapshot.data[_likeBloc.toBase64(data.title + data.time)] ==
+                  null
+                  ? false
+                  : snapshot
+                  .data[_likeBloc.toBase64(data.title + data.time)])
               : _showItemNormal(context, data);
         });
+  }
+
+  Widget _showItemNormal(context, data) {
+    return ListTile(
+      leading: Text(
+        data.time,
+        style: TextStyle(
+            color: Theme.of(context).primaryColorLight, fontSize: 12.0),
+      ),
+      title: Text(
+        data.title,
+        style: TextStyle(color: Theme.of(context).accentColor, fontSize: 16.0),
+      ),
+    );
   }
 
   Widget _showItemSection(context, data, liked) {
@@ -162,7 +213,7 @@ class SchedulePage extends StatelessWidget {
                     Text(
                       data.names.join(", "),
                       style:
-                          TextStyle(color: Color(0xffa5b495), fontSize: 12.0),
+                      TextStyle(color: Color(0xffa5b495), fontSize: 12.0),
                     ),
                   ],
                 ),
@@ -182,21 +233,10 @@ class SchedulePage extends StatelessWidget {
     );
   }
 
-  Widget _showItemNormal(context, data) {
-    return ListTile(
-      leading: Text(
-        data.time,
-        style: TextStyle(
-            color: Theme.of(context).primaryColorLight, fontSize: 12.0),
-      ),
-      title: Text(
-        data.title,
-        style: TextStyle(color: Theme.of(context).accentColor, fontSize: 16.0),
-      ),
-    );
-  }
-
   showDetailPage(BuildContext context, data) {
     Navigator.of(context).push(SessionDetailDialog(data));
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
