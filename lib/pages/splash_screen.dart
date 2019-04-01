@@ -1,6 +1,8 @@
 import 'dart:math';
 
 import 'package:droidknights/const/route.dart';
+import 'package:droidknights/models/schedule_service.dart';
+import 'package:droidknights/res/strings.dart';
 import 'package:droidknights/util/animation.dart';
 import 'package:flutter/material.dart';
 import 'dart:io' show Platform;
@@ -25,6 +27,8 @@ class SplashScreenState extends State<SplashScreen> with SingleTickerProviderSta
   @override
   void initState() {
     super.initState();
+
+    loadJsonDatas();
 
     Random random = new Random();
     _topAndLefts = new List<int>.generate(NUMBER_OF_STARS, (int i) => i)
